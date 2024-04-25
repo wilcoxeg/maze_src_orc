@@ -1,0 +1,50 @@
+#Reference,"Matthew J. Traxler, Robin K. Morris, and Rachel E. Seely, ""Processing Subject and Object Relative Clauses: Evidence from Eye Movements""",,,,,,,,
+item,condition,matrix_subj,compl,subj_det,subj_n,verb,obj_det,obj_n,continuation
+1,subj_rc,The banker,that,,,irritated,the,lawyer,played tennis every Sunday
+1,obj_rc,The banker,that,the,lawyer,irritated,,,played tennis every Sunday
+2,subj_rc,The child,that ,,,chased,the,babysitter,squealed with delight at the game
+2,obj_rc,The child,that ,the,babysitter,chased,,,squealed with delight at the game
+3,subj_rc,The pilot,that,,,complimented,the,flight attendant,asked for a date
+3,obj_rc,The pilot,that,the,flight attendant,complimented,,,asked for a date
+4,subj_rc,The quarterback,that,,,hated,the,linebacker,played a practical joke
+4,obj_rc,The quarterback,that,the,linebacker,hated,,,played a practical joke
+5,subj_rc,The businessman,that,,,married,the,secretary,invited the bookkeeper to the party
+5,obj_rc,The businessman,that,the,secretary,married,,,invited the bookkeeper to the party
+6,subj_rc,The doctor,that ,,,ignored,the,nurse,drove a red convertible
+6,obj_rc,The doctor,that ,the,nurse,ignored,,,drove a red convertible
+7,subj_rc,The mechanic,that,,,divorced,the,waitress,cheated on her often
+7,obj_rc,The mechanic,that,the,waitress,divorced,,,cheated on her often
+8,subj_rc,The writer,that,,,complimented,the,photographer,worked for a national magazine
+8,obj_rc,The writer,that,the,photographer,complimented,,,worked for a national magazine
+9,subj_rc,The burglar,that ,,,scared,the,policeman,robbed three house in one night
+9,obj_rc,The burglar,that ,the,policeman,scared,,,robbed three house in one night
+10,subj_rc,The editor,that,,,angered,the,writer,fired the entire staff
+10,obj_rc,The editor,that,the,writer,angered,,,fired the entire staff
+11,subj_rc,The prisoner,that,,,attacked,the,guard,provoked the riot
+11,obj_rc,The prisoner,that,the,guard,attacked,,,provoked the riot
+12,subj_rc,The director,that ,,,admired,the,dancer,gave her the leading role
+12,obj_rc,The director,that ,the,dancer,admired,,,gave her the leading role
+13,subj_rc,The hiker,that,,,passed,the,fisherman,got lost and had to be rescued
+13,obj_rc,The hiker,that,the,fisherman,passed,,,got lost and had to be rescued
+14,subj_rc,The tenant,that,,,despised,the,landlord,phoned the newspaper to complain
+14,obj_rc,The tenant,that,the,landlord,despised,,,phoned the newspaper to complain
+15,subj_rc,The soldier,that ,,,assisted,the,civilian,received a meal from the army
+15,obj_rc,The soldier,that ,the,civilian,assisted,,,received a meal from the army
+16,subj_rc,The cowboy,that,,,killed,the,seriff,wore a red vest and a tan hat
+16,obj_rc,The cowboy,that,the,seriff,killed,,,wore a red vest and a tan hat
+17,subj_rc,The professor,that,,,crticized,the,student,blushed and turned away
+17,obj_rc,The professor,that,the,student,crticized,,,blushed and turned away
+18,subj_rc,The plumber,that ,,,helped,the,electrician,retired after twenty years on the job
+18,obj_rc,The plumber,that ,the,electrician,helped,,,retired after twenty years on the job
+19,subj_rc,The client,that,,,confronted,the,psychologist,attacked her in the night
+19,obj_rc,The client,that,the,psychologist,confronted,,,attacked her in the night
+20,subj_rc,The golfer,that,,,liked,the,caddy,played on the professional tour
+20,obj_rc,The golfer,that,the,caddy,liked,,,played on the professional tour
+21,subj_rc,The hunter,that ,,,saw,the,game warden,ran off into the forest
+21,obj_rc,The hunter,that ,the,game warden,saw,,,ran off into the forest
+22,subj_rc,The historian,that,,,criticized,the,freshman,felt really bad afterward
+22,obj_rc,The historian,that,the,freshman,criticized,,,felt really bad afterward
+23,subj_rc,The actor,that,,,visited,the,director,demanded the starring role
+23,obj_rc,The actor,that,the,director,visited,,,demanded the starring role
+24,subj_rc,The wolf,that ,,,approached,the,deer,injured the helpless animal
+24,obj_rc,The wolf,that ,the,deer,approached,,,injured the helpless animal

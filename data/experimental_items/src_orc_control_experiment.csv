@@ -1,0 +1,50 @@
+#Reference,"A. Staub, “Eye movements and processing difficulty in object relative clauses”",,,,,,,,
+item,condition,matrix,embed,compl,det,noun,verb,continuation
+1,obj_rc,The bus driver,,that,the,kids,followed,wondered about the location of a hotel
+1,embed,The bus driver,said,that,the,kids,followed,him all the way home
+2,obj_rc,The chef,,that,the,cameraman,distracted,poured the flour onto the counter
+2,embed,The chef,knew,that,the,cameraman,distracted,the guest on the show
+3,obj_rc,The children,,that,the,father,woke,bothered him about the trip to the beach
+3,embed,The children,heard,that,the,father,woke,their grandmother for the party
+4,obj_rc,The class,,that,the,teacher,disliked,skimmed the reading for the week
+4,embed,The class,knew,that,the,teacher,disliked,certain twentieth century writers
+5,obj_rc,The dancer,,that,the,audience,loved,ignored some basic principles
+5,embed,The dancer,saw,that,the,audience,loved,the last movement of the performance
+6,obj_rc,The employees,,that,the,fireman,noticed,hurried across the open field
+6,embed,The employees,hoped,that,the,fireman,noticed,the people who were still in the building
+7,obj_rc,The farmer,,that,the,customers,approached,lifted the chickens from their coop
+7,embed,The farmer,saw,that,the,customers,approached,the horse in the pasture
+8,obj_rc,The farmer,,that,the,rancher,hired,piled the seeds in long rows
+8,embed,The farmer,believed,that,the,rancher,hired,too many seasonal workers
+9,obj_rc,The firemen,,that,the,residents,called,attacked the house with high-powered hoses
+9,embed,The firemen,claimed,that,the,residents,called,the station in a panic
+10,obj_rc,The girl,,that,the,parents,watched,changed a critical part of the story
+10,embed,The girl,worried,that,the,parents,watched,to see if she was skipping school
+11,obj_rc,The investigator,,that,the,agency,phoned,considered Ms. Reynolds from accounting
+11,embed,The investigator,knew,that,the,agency,phoned,the client because of the unpaid bills
+12,obj_rc,The judge,,that,the,witnesses,addressed,noticed the defense attorneys
+12,embed,The judge,heard,that,the,witnesses,addressed,the defense attorneys by name
+13,obj_rc,The manager,,that,the,boss,visited,remembered some inconvenient facts
+13,embed,The manager,thought,that,the,boss,visited,every second Tuesday of the month
+14,obj_rc,The mathematician,,that,the,chairman,visited,created a solution to the well-known problem
+14,embed,The mathematician,recalled,that,the,chairman,visited,their German colleagues in May
+15,obj_rc,The monkeys,,that,the,zookeepers,watched,charged the bars of their cage
+15,embed,The monkeys,knew,that,the,zookeepers,watched,when they charged the bars of their cage
+16,obj_rc,The movie star,,that,the,organizers,visited,proposed an annual prize
+16,embed,The movie star,hoped,that,the,organizers,visited,his favorite charity
+17,obj_rc,The neighbor,,that,the,couple,observed,purchased the old Victorian house
+17,embed,The neighbor,thought,that,the,couple,observed,the kids rather intently
+18,obj_rc,The pilot,,that,the,ground crew,delayed,remained on the runway for a long time
+18,embed,The pilot,believed,that,the,ground crew,delayed,the flight intentionally
+19,obj_rc,The soldiers,,that,the,natives,helped,climbed the big rock that blocked the path
+19,embed,The soldiers,thought,that,the,natives,helped,the enemy hide in the jungle
+20,obj_rc,The speaker,,that,the,economists,entertained,predicted a good year for the industry
+20,embed,The speaker,said,that,the,economists,entertained,some ridiculous hypotheses
+21,obj_rc,The shipping company,,that,the,box,came,from was located in Akron
+21,embed,The shipping company,claimed,that,the,box,came,with the dent already in it
+22,obj_rc,The trainer,,that,the,jockey,called,rubbed the horse’s skin
+22,embed,The trainer,thought,that,the,jockey,called,for assistance too often
+23,obj_rc,The veteran,,that,the,coach,admired,defeated his greatest rival
+23,embed,The veteran,knew,that,the,coach,admired,the way he tutored the younger players
+24,obj_rc,The visitor,,that,the,student,introduced,walked across the quad
+24,embed,The visitor,said,that,the,student,introduced,her at the cocktail party

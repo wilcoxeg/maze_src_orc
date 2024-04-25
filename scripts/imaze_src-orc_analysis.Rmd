@@ -1,0 +1,479 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+library(tidyverse)
+library(lme4)
+library(lmerTest)
+library(plotrix)
+library(stringr)
+library(urltools)
+library(dplyr)
+library(readxl)
+library(rpart)
+library(sjPlot)
+library(dplyr)
+library(brms)
+library(Hmisc)
+
+```
+
+# I-Maze Analysis
+
+### Clean Data and Remove Outliers
+
+```{r, warning = FALSE}
+d = read.csv('../data/src-orc-results.csv', comment = "#") %>%
+  mutate(rt = as.numeric(as.character(rt)),
+         correct = if_else(correct=="no", F, T))
+
+#Remove data that is after mistake
+data_no_na<- d %>% filter(!(is.na(rt)))
+message("Removed ", format(100-100*nrow(data_no_na)/nrow(d), digits=4), "% of the data for being na (after a mistake).")
+
+#Find standard deviation and mean of reading time
+stdev_rt = sd(data_no_na$rt)
+mean_rt = mean(data_no_na$rt)
+
+#Changed data that is more than 2 standard deviations from mean to become NA this means that in the next cell when we sum by reading time, regions that 
+# have some of data that is an outlier will become an NA
+data_cleaned <- d %>% mutate(rt = replace(rt, rt > mean_rt + 2*stdev_rt, NA)) %>% mutate(rt = replace(rt, rt < mean_rt - 2*stdev_rt, NA))
+
+message("Filtered away all reading times off by 2 standard deviations. This constitutes ", format(nrow(filter(d, rt > mean_rt + 2*stdev_rt)) + nrow(filter(d, rt < mean_rt - 2*stdev_rt))), " words or ", format(100*(nrow(filter(d, rt > mean_rt + 2*stdev_rt)) + nrow(filter(d, rt < mean_rt - 2*stdev_rt))) / nrow(data_no_na), digits=4), "% words across the participants.")
+
+# Get by-region sums
+mean_df = data_cleaned %>%
+  filter(type == "obj_rc" | type == "subj_rc") %>%
+  group_by(MD5, group, type, word_number, region_number, correct) %>% 
+    summarise(total_rt=mean(rt), 
+              all_correct=all(correct)) %>%
+  ungroup() %>%
+  filter(!(is.na(total_rt)))
+
+```
+
+```{r}
+mean_df %>%
+  mutate(region_number = if_else(type == "subj_rc" & region_number > 2, word_number + 2, as.numeric(region_number))) %>%
+  mutate(region_number = if_else(type == "obj_rc" & region_number > 7, word_number + 2, as.numeric(region_number))) %>%
+  mutate(region_number = if_else(region_number > 10, 11, as.numeric(region_number))) %>%
+
+
+  mutate(all_correct = if_else(all_correct == T, 0, 1)) %>%
+  group_by(type, region_number) %>%
+    summarise(m=mean(all_correct),
+              upper = binconf(sum(all_correct), n())[2],
+              lower = binconf(sum(all_correct), n())[3]) %>%
+  ungroup() %>%
+  ggplot(aes(x=region_number, y=m, color=type)) +
+    theme_bw() +
+    geom_line(size = 0.7, aes(linetype = type)) +
+    geom_point(size=2) +
+    scale_x_continuous(breaks=1:11,labels=c("The hiker", "that", "the", "ranger", "passed", "the", "ranger", "got", "lost", "and", "had to \n be rescued")) + 
+    geom_errorbar(aes(ymin = lower, ymax=upper), width = 0.1) +
+  
+    scale_color_manual(values = c("#172d69", "#8197d4"), labels = c("Object Relative Clause", "Subject Relative Clause")) +
+    labs(color = "Condition") +
+    guides(linetype = F) +
+  
+    ggtitle("Error Rate by Sentence Region") +
+    ylab("Error Rate") +
+    theme(
+      axis.text.x = element_blank(),
+      legend.position = c(0.4, 0.75),
+      legend.title = element_blank(),
+      axis.title.x = element_blank()
+    )
+
+ggsave("../images/cogsci/subjobj_error.pdf", width = 8, height = 2, device = "pdf")
+```
+
+```{r}
+
+mean_df %>%
+  mutate(region_number = if_else(type == "subj_rc" & region_number > 2, word_number + 2, as.numeric(region_number))) %>%
+  mutate(region_number = if_else(type == "obj_rc" & region_number > 7, word_number + 2, as.numeric(region_number))) %>%
+  mutate(region_number = if_else(region_number > 10, 11, as.numeric(region_number))) %>%
+
+  filter(all_correct) %>%
+  group_by(type, region_number) %>%
+    summarise(m=mean(total_rt),
+              s = std.error(total_rt),
+              upper = m + s * 1.96,
+              lower = m - s * 1.96) %>%
+  ungroup() %>%
+  ggplot(aes(x=region_number, y=m, color=type)) +
+    theme_bw() +
+    geom_line(aes(linetype=type)) +
+    geom_point(size=2) +
+    scale_x_continuous(breaks=1:11,labels=c("The hiker", "that", "the", "ranger", "passed", "the", "ranger", "got", "lost", "and", "had to \n be rescued")) + 
+    geom_errorbar(aes(ymin = lower, ymax=upper), width = 0.1) +
+  
+    scale_color_manual(values = c("#172d69", "#8197d4"), labels = c("Object Relative Clause", "Subject Relative Clause")) +
+    guides(linetype = F) +
+  
+    ggtitle("Mean Read Time by Sentence Region") +
+    ylab("Read Time in Milliseconds") +
+    theme(
+      axis.text.x = element_text(angle = 0, hjust = 0.5,size=10),
+      legend.position = c(0.2, 0.8),
+      legend.title = element_blank(),
+      axis.title.x = element_blank()
+    )
+
+ggsave("../images/cogsci/subobj_rt.pdf", width = 8, height = 2.7, device = "pdf")
+
+```
+
+## Target Plot
+
+```{r}
+
+mean_df %>%
+  mutate(rc_word = case_when(
+    type == "subj_rc" & region_number == 5 ~ "verb",
+    type == "subj_rc" & region_number == 6 ~ "the",
+    type == "subj_rc" & region_number == 7 ~ "noun",
+    type == "obj_rc" & region_number == 3 ~ "the",
+    type == "obj_rc" & region_number == 4 ~ "noun",
+    type == "obj_rc" & region_number == 5 ~ "verb"
+  )) %>%
+  mutate(rc_word = factor(rc_word, levels = c("the", "noun", "verb"))) %>%
+  filter(!is.na(rc_word), correct == T) %>%
+  group_by(type, rc_word) %>%
+    summarise(m=mean(total_rt),
+              s = std.error(total_rt),
+              upper = m + s * 1.96,
+              lower = m - s * 1.96) %>%
+  ungroup() %>%
+    ggplot(aes(x=rc_word, y=m, fill=type)) +
+    theme_bw() +
+    geom_bar(stat="identity", position = position_dodge(width = 0.9)) +
+    geom_errorbar(aes(ymax = upper, ymin = lower), position = position_dodge(width = 0.9), width = 0.2) +
+
+    #geom_text(aes(y=value - 20, label=value), color="white", position = position_dodge(width = 0.9)) +
+    scale_fill_manual(values = c("#172d69", "#8197d4"), labels = c("Object Relative Clause", "Subject Relative Clause")) +
+    #coord_cartesian(ylim=c(0, 350)) +
+    guides(linetype = F) +
+    labs(fill="") +
+    ggtitle("Exp. 1: Target Region") +
+    ylab("Read Time in Milliseconds") +
+    theme(
+      axis.text.x = element_text(angle = 0, hjust = 0.5,size=10),
+      legend.position = "bottom",
+      axis.title.x = element_blank()
+    )
+
+ggsave("../images/cogsci/target_exp1.pdf", width = 4, height = 3.5, device = "pdf")
+
+```
+
+
+
+```{r}
+
+# First fixation
+#eye_df = data.frame( c(232, 231, 222, 267, NA, NA, 286), c(224, NA, NA, 223, 239, 239, 286), c(2,3,4,5,6,7,8))
+
+# Gaze Duration
+eye_df = data.frame( c(250, 249, 266, 318, NA, NA, 346), c(237, NA, NA, 270, 239, 316, 357), c(2,3,4,5,6,7,8))
+
+colnames(eye_df) = c("obj_rc", "subj_rc", "region")
+
+eye_df %>%
+  gather(cond, value, c("subj_rc", "obj_rc")) %>%
+  drop_na() %>%
+  ggplot(aes(x=region, y=value, color=cond)) +
+    theme_bw() +
+    geom_point(size=2) +
+    geom_line(aes(linetype=cond)) +
+    geom_segment(aes(x=5,y=275,yend=315,xend=5), color="blue", alpha=0.5, arrow = arrow(length = unit(0.2, "cm")),inherit.aes=FALSE) +
+    geom_segment(aes(x=5,y=315,yend=275,xend=5), color="blue", alpha=0.5, arrow = arrow(length = unit(0.2, "cm")),inherit.aes=FALSE) +
+    geom_segment(aes(x=4,y=262,yend=262,xend=7), color="grey", linetype="dashed", alpha=1,inherit.aes=FALSE) +
+    geom_segment(aes(x=7,y=268,yend=310,xend=7), color="blue", alpha=0.5, arrow = arrow(length = unit(0.2, "cm")),inherit.aes=FALSE) +
+    geom_segment(aes(x=7,y=310,yend=268,xend=7), color="blue", alpha=0.5, arrow = arrow(length = unit(0.2, "cm")),inherit.aes=FALSE) +
+
+    scale_x_continuous(breaks=2:8,labels=c("that", "the", "fireman", "noticed", "the", "fireman", "hurried")) +
+
+    scale_color_manual(values = c("#00523d", "#3ed918"), labels = c("Object Relative Clause", "Subject Relative Clause")) +
+    labs(color = "Condition") +
+    guides(linetype = F) +
+  
+    ggtitle("Gaze Duration from Staub 2010") +
+    ylab("Gaze Duration Time in Milliseconds") +
+    theme(
+      axis.text.x = element_text(angle = 15, hjust = 1,size=10),
+      legend.position = c(0.2, 0.8),
+      axis.title.x = element_blank()
+    )
+
+ggsave("../images/cogsci/staub.pdf", width = 8, height = 3, device = "pdf")
+
+    
+```
+
+```{r}
+
+# First fixation
+#eye_df = data.frame( c(232, 231, 222, 267, NA, NA, 286), c(224, NA, NA, 223, 239, 239, 286), c(2,3,4,5,6,7,8))
+
+# Gaze Duration
+eye_df = data.frame( c(250, 249, 266, 318, NA, NA, 346), c(237, NA, NA, 270, 239, 316, 357), c(2,3,4,5,6,7,8))
+
+colnames(eye_df) = c("obj_rc", "subj_rc", "region")
+
+eye_df %>%
+  gather(cond, value, c("subj_rc", "obj_rc")) %>%
+  mutate(word = case_when(
+    cond == "obj_rc" & region == 3 ~ "Determiner",
+    cond == "subj_rc" & region == 6 ~ "Determiner",
+    cond == "obj_rc" & region == 4 ~ "Noun",
+    cond == "subj_rc" & region == 7 ~ "Noun",
+    region == 5 ~ "Verb"
+  )) %>%
+  drop_na() %>%
+  ggplot(aes(x=word, y=value, fill=cond)) +
+    theme_bw() +
+    geom_bar(stat="identity", position = position_dodge(width = 0.9)) +
+    geom_text(aes(y=value - 20, label=value), color="white", position = position_dodge(width = 0.9)) +
+    scale_fill_manual(values = c("#172d69", "#8197d4"), labels = c("Object Relative Clause", "Subject Relative Clause")) +
+    coord_cartesian(ylim=c(0, 350)) +
+    guides(linetype = F) +
+    labs(fill="") +
+  
+    ggtitle("Gaze Duration from Staub 2010") +
+    ylab("Gaze Duration Time in Milliseconds") +
+    theme(
+      axis.text.x = element_text(angle = 0, hjust = 0.5,size=10),
+      legend.position = "bottom",
+      axis.title.x = element_blank()
+    )
+
+ggsave("../images/cogsci/staub_small.pdf", width = 4, height = 3.5, device = "pdf")
+
+    
+```
+
+
+```{r}
+
+lm = mean_df %>%
+  mutate(rc = case_when(
+    type == "subj_rc" & region_number == 5 ~ "rc",
+    type == "subj_rc" & region_number == 6 ~ "rc",
+    type == "subj_rc" & region_number == 7 ~ "rc",
+    type == "obj_rc" & region_number == 3 ~ "rc",
+    type == "obj_rc" & region_number == 4 ~ "rc",
+    type == "obj_rc" & region_number == 5 ~ "rc"
+  )) %>%
+  filter(rc == "rc") %>%
+  group_by(type, group, MD5) %>%
+    summarise(total_rt = sum(total_rt),
+              all_correct = all(all_correct)) %>%
+  ungroup() %>%
+  filter(all_correct) %>%
+  mutate(type.numeric = if_else(type == "obj_rc", 1, -1),
+         group = as.factor(group)) %>%
+  lmer(total_rt ~ type.numeric + (type.numeric|MD5) + (type.numeric|group), data = .)
+summary(lm)
+
+lm = mean_df %>%
+  filter( (type == "obj_rc" & region_number == 3) | (type == "subj_rc" & region_number == 6)) %>%
+  lmer(total_rt ~ type + (type|group) + (type|MD5), data = .)
+summary(lm)
+
+lm = mean_df %>%
+  filter((type == "obj_rc" & region_number == 4) | (type == "subj_rc" & region_number == 7)) %>%
+  lmer(total_rt ~ type + (type|group) + (type|MD5), data = .)
+summary(lm)
+
+lm = mean_df %>%
+  filter(region_number == 5) %>%
+  lmer(total_rt ~ type + (type|group) + (type|MD5), data = .)
+summary(lm)
+
+
+```
+
+### Clean Data and Remove Outliers
+
+```{r, warning = FALSE}
+d = read.csv('../data/src_orc_control_results.csv', comment = "#") %>%
+  mutate(rt = as.numeric(as.character(rt)),
+         correct = if_else(correct=="no", F, T))
+
+#Remove data that is after mistake
+data_no_na<- d %>% filter(!(is.na(rt)))
+message("Removed ", format(100-100*nrow(data_no_na)/nrow(d), digits=4), "% of the data for being na (after a mistake).")
+
+#Find standard deviation and mean of reading time
+stdev_rt = sd(data_no_na$rt)
+mean_rt = mean(data_no_na$rt)
+
+#Changed data that is more than 2 standard deviations from mean to become NA this means that in the next cell when we sum by reading time, regions that 
+# have some of data that is an outlier will become an NA
+data_cleaned <- d %>% mutate(rt = replace(rt, rt > mean_rt + 2*stdev_rt, NA)) %>% mutate(rt = replace(rt, rt < mean_rt - 2*stdev_rt, NA))
+
+message("Filtered away all reading times off by 2 standard deviations. This constitutes ", format(nrow(filter(d, rt > mean_rt + 2*stdev_rt)) + nrow(filter(d, rt < mean_rt - 2*stdev_rt))), " words or ", format(100*(nrow(filter(d, rt > mean_rt + 2*stdev_rt)) + nrow(filter(d, rt < mean_rt - 2*stdev_rt))) / nrow(data_no_na), digits=4), "% words across the participants.")
+
+# Get by-region sums
+mean_df = data_cleaned %>%
+  filter(type == "obj_rc" | type == "embed") %>%
+  group_by(MD5, group, type, region_number, correct) %>% 
+    summarise(total_rt=mean(rt), 
+              all_correct=all(correct)) %>%
+  ungroup() %>%
+  filter(!(is.na(total_rt)))
+
+
+```
+
+
+```{r}
+mean_df %>%
+  mutate(all_correct = if_else(all_correct == T, 0, 1)) %>%
+  group_by(type, region_number) %>%
+    summarise(m=mean(all_correct),
+              upper = binconf(sum(all_correct), n())[2],
+              lower = binconf(sum(all_correct), n())[3]) %>%
+  ungroup() %>%
+  ggplot(aes(x=region_number, y=m, color=type)) +
+    theme_bw() +
+    geom_line(size = 0.7, aes(linetype = type)) +
+    geom_point(size=2) +
+    scale_x_continuous(breaks=1:7,labels=c("The driver", "said", "that", "the", "kids", "followed", "him home. \n wondered about things.")) + 
+    geom_errorbar(aes(ymin = lower, ymax=upper), width = 0.1) +
+  
+    scale_color_manual(values = c("#172d69", "#8197d4"), labels = c("Embedded Verb", "Object Relative Clause")) +
+    labs(color = "Condition") +
+    guides(linetype = F) +
+  
+    ggtitle("Error Rate by Sentence Region") +
+    ylab("Error Rate") +
+    theme(
+      axis.text.x = element_blank(),
+      legend.position = c(0.8, 0.7),
+      legend.title = element_blank(),
+      axis.title.x = element_blank()
+    )
+
+ggsave("../images/cogsci/control_error.pdf", width = 8, height = 2, device = "pdf")
+```
+
+
+
+
+
+```{r}
+
+mean_df %>%
+  filter(all_correct) %>%
+  group_by(type, region_number) %>%
+    summarise(m=mean(total_rt),
+              s = std.error(total_rt),
+              upper = m + s * 1.96,
+              lower = m - s * 1.96) %>%
+  ungroup() %>%
+  ggplot(aes(x=region_number, y=m, color=type, linetype=type)) +
+    theme_bw() +
+    geom_line(size=0.5) +
+    geom_point(size=2) +
+    scale_x_continuous(breaks=1:7,labels=c("The driver", "said", "that", "the", "kids", "followed", "him home. / \n went home.")) + 
+    geom_errorbar(aes(ymin = lower, ymax=upper), width = 0.1) +
+  
+    scale_color_manual(values = c("#172d69", "#8197d4"), labels = c("Embedded Verb", "Object Relative Clause")) +
+    labs(color = "Condition") +
+    guides(linetype = F) +
+  
+    ggtitle("Mean Read Time by Sentence Region") +
+    ylab("Read Time in Milliseconds") +
+    theme(
+      axis.text.x = element_text(angle = 0, hjust = 0.5,size=10),
+      legend.position = c(0.8, 0.3),
+      legend.title = element_blank(),
+      axis.title.x = element_blank()
+    )
+
+ggsave("../images/cogsci/control_rt.pdf", width = 8, height = 2.7, device = "pdf")
+
+```
+
+```{r}
+
+lm = mean_df %>%
+  filter(region_number == 3 | region_number == 4 | region_number == 5) %>%
+  group_by(type, group, MD5) %>%
+    summarise(total_rt = sum(total_rt),
+              all_correct = all(all_correct)) %>%
+  ungroup() %>%
+  filter(all_correct) %>%
+  mutate(type.numeric = if_else(type == "obj_rc", 1, -1),
+         group = as.factor(group)) %>%
+  lmer(total_rt ~ type.numeric + (type.numeric||MD5) + (type.numeric||group), data = .)
+summary(lm)
+
+lm = mean_df %>%
+  filter(region_number == 3) %>%
+  mutate(type.numeric = if_else(type == "obj_rc", 1, -1)) %>%
+  lmer(total_rt ~ type.numeric + (type.numeric||group) + (type.numeric||MD5), data = .)
+summary(lm)
+
+lm = mean_df %>%
+  filter(region_number == 4) %>%
+  mutate(type.numeric = if_else(type == "obj_rc", 1, -1)) %>%
+  lmer(total_rt ~ type.numeric + (type.numeric||group) + (type.numeric||MD5), data = .)
+summary(lm)
+
+lm = mean_df %>%
+  filter(region_number == 5) %>%
+  mutate(type.numeric = if_else(type == "obj_rc", 1, -1)) %>%
+  lmer(total_rt ~ type.numeric + (type.numeric||group) + (type.numeric||MD5), data = .)
+summary(lm)
+
+```
+
+## Target Plot
+
+```{r}
+
+mean_df %>%
+  mutate(rc_word = case_when(
+    region_number == 3 ~ "that",
+    region_number == 4 ~ "the",
+    region_number == 5 ~ "noun"
+  )) %>%
+  mutate(rc_word = factor(rc_word, levels = c("that", "the", "noun"))) %>%
+  filter(!is.na(rc_word), correct == T) %>%
+  group_by(type, rc_word) %>%
+    summarise(m=mean(total_rt),
+              s = std.error(total_rt),
+              upper = m + s * 1.96,
+              lower = m - s * 1.96) %>%
+  ungroup() %>%
+    ggplot(aes(x=rc_word, y=m, fill=type)) +
+    theme_bw() +
+    geom_bar(stat="identity", position = position_dodge(width = 0.9)) +
+    geom_errorbar(aes(ymax = upper, ymin = lower), position = position_dodge(width = 0.9), width = 0.2) +
+
+    #geom_text(aes(y=value - 20, label=value), color="white", position = position_dodge(width = 0.9)) +
+    scale_fill_manual(values = c("#172d69", "#8197d4"), labels = c("Embedded Verb", "Object Relative Clause")) +
+    #coord_cartesian(ylim=c(0, 350)) +
+    guides(linetype = F) +
+    labs(fill="") +
+    ggtitle("Exp. 2: Target Region") +
+    ylab("Read Time in Milliseconds") +
+    theme(
+      axis.text.x = element_text(angle = 0, hjust = 0.5,size=10),
+      legend.position = "bottom",
+      axis.title.x = element_blank()
+    )
+
+ggsave("../images/cogsci/target_exp2.pdf", width = 4, height = 3.5, device = "pdf")
+
+```
